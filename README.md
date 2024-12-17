@@ -18,7 +18,7 @@ Very important to note that it is just a parody, custom version with not ALL fun
    ```bash
    cd shelld
    ```
-3. Build the project (or run the script that will just place it correctly):
+3. Build the project (or run the shell script that will just place it correctly):
    ```bash
    make
    ```
