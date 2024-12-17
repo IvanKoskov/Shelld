@@ -14,6 +14,10 @@
 #include <errno.h>      
 #include <cstring>      
 #include <dirent.h>
+#include <deque>
+#include <map>
+#include <sstream>
+//our shell colrs. Red does not work by some reason...
 #define RESET   "\033[0m"
 #define BLACK   "\033[30m"
 #define RED     "\033[31m"
@@ -24,6 +28,10 @@
 #define CYAN    "\033[36m"
 #define WHITE   "\033[37m"
 
+//some text style
+
+#define BOLD    "\033[1m"
+
 /*
 Shelld structure is pretty similar and yet good in terms of compatibility. Linux and MacOS are supported natively. 
 
@@ -31,20 +39,10 @@ The Shell here is presented as class with its own private methods and clear entr
 It is actually a root of the project and can be imported.
 
 */
-
-
-
-
-
-
-
-
-
-
 class Shelld {
 public:
 
-   void runShell(); 
+   void runShell(); //it is the entry and access to all functionality of the shell
 
 private:
     void displayPrompt(); 
@@ -64,6 +62,19 @@ private:
     void makeDirectory(const std::vector<std::string>& args);
     void deleteDirectoryRecursively(const std::vector<std::string>& args);
     void readCommand(const std::vector<std::string>& args);
+    void dateCommand();
+    std::deque<std::string> commandHistory; 
+    void printHistory();
+    void moveFileOrDirectory(const std::vector<std::string>& args);
+    void renameCommand(const std::vector<std::string>& args);
+    void dudeCommand(std::string nameofpc);
+    void setPromptColor(const std::string& color);
+    std::string promptColor = RESET;  // Default prompt color
+    std::map<std::string, std::string> colorMap = {
+        {"red", RED}, {"green", GREEN}, {"yellow", YELLOW},
+        {"blue", BLUE}, {"magenta", MAGENTA}, {"cyan", CYAN},
+        {"white", WHITE}
+    };
 };
 
 

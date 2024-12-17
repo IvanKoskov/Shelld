@@ -11,7 +11,12 @@
     while (true) {  
         displayPrompt();  
         std::string input = readInput();
+          commandHistory.push_back(input);
 
+        // Keep only the last 5 commands
+        if (commandHistory.size() > 5) {
+            commandHistory.pop_front();  // Remove the oldest command if there are more than 5
+        }
  
         if (input.empty()) {
             continue;
@@ -19,6 +24,25 @@
 
         else if (input == "flash" || input == "clear") {
         flashScreen();
+
+        }
+
+        else if (input == "nowtime") {
+       dateCommand();
+
+
+
+        }
+
+        else if (input == "dude") {
+         const char* user = getlogin();
+         
+         dudeCommand(user);
+        }
+
+        else if (input == "his") {
+        printHistory();
+
 
         }
 
@@ -45,7 +69,7 @@
     makeDirectory(args);
        }
 
-        else if (input.rfind("cat", 0) == 0) {
+        else if (input.rfind("readit", 0) == 0) {
     std::vector<std::string> args = parseInput(input);
     readCommand(args);
         }
@@ -74,6 +98,23 @@
     crCommand(args); 
 }
 
+     else if (input.rfind("mv", 0) == 0) {
+    std::vector<std::string> args = parseInput(input);
+    moveFileOrDirectory(args);
+}
+
+else if (input.rfind("rename", 0) == 0) {
+    std::vector<std::string> args = parseInput(input);
+    renameCommand(args);
+}
+
+  else if (input.rfind("setpromptcolor", 0) == 0) {
+            std::stringstream ss(input);
+            std::string cmd, color;
+            ss >> cmd >> color;  // Extract command and color
+            setPromptColor(color);
+        }
+
         else if (input.rfind("ls", 0) == 0) { 
     std::vector<std::string> args = parseInput(input); 
     listDirectoryContents(args);  
@@ -93,7 +134,7 @@
 }
 
 void Shelld::displayPrompt() {
-    std::cout << "From Shelld > ";  // Display prompt
+    std::cout << promptColor << "From Shelld > " << RESET;  // Display prompt
     std::cout.flush();  // Ensure it's printed immediately
 }
 
@@ -198,12 +239,24 @@ void Shelld::helpCommand() {
     std::cout << YELLOW << "+-------------------------------+" << RESET << std::endl;
     std::cout << GREEN << "echo: Print text to the console" << RESET << std::endl;
     std::cout << GREEN << "ls: List directory contents" << RESET << std::endl;
-    std::cout << GREEN << "cd: Change the current directory" << RESET << std::endl;
+    std::cout << GREEN << "chd: Change the current directory" << RESET << std::endl;
     std::cout << GREEN << "dir: Show current directory" << RESET << std::endl;
     std::cout << GREEN << "i_am: Show current user" << RESET << std::endl;
     std::cout << GREEN << "cr: touch alternative, creates file(s)" << RESET << std::endl;
+    std::cout << GREEN << "readit: read file(s)" << RESET << std::endl;
+    std::cout << GREEN << "mkd: create directory(s)" << RESET << std::endl;
+    std::cout << GREEN << "dldir: delete directory(s)" << RESET << std::endl;
+    std::cout << GREEN << "dlt: delete file(s)" << RESET << std::endl;
+    std::cout << GREEN << "setpromptcolor: changes the entry point color, but does not chnage anything else though." << RESET << std::endl;
+    std::cout << GREEN << "setpromptcolor colors: to see all supported colors" << RESET << std::endl;
     std::cout << CYAN << "LF: Exit the shell" << RESET << std::endl;
+    std::cout << CYAN << "his: prints recent history" << RESET << std::endl;
+    std::cout << BLUE << "nowtime: the accurate time in that moment" << RESET << std::endl;
+    std::cout << BLUE << "flash // Clear : Both can clear the screen or just leave the entry point for Shelld" << RESET << std::endl;
+    std::cout << BLUE << "rename: change name of files or directories" << RESET << std::endl;
+    std::cout << BLUE << "mv: standard command to move everythings as you like" << RESET << std::endl;
     std::cout << MAGENTA << "wha: Help" << RESET << std::endl;
+    std::cout << CYAN << "dude: general documentation and instructions" << RESET << std::endl;
     std::cout << YELLOW << "+-------------------------------+" << RESET << std::endl;
 }
 
@@ -316,5 +369,100 @@ void Shelld::readCommand(const std::vector<std::string>& args) {
         } else {
             std::cerr << "cat: cannot open file " << args[i] << std::endl;
         }
+    }
+}
+
+
+void Shelld::dateCommand() {
+    auto now = std::chrono::system_clock::now();
+    std::time_t currentTime = std::chrono::system_clock::to_time_t(now);
+    std::cout <<BLUE<< "Current date and time: " << RESET <<std::ctime(&currentTime);
+}
+
+void Shelld::printHistory(){
+  std::cout << BLUE <<"Command History:" << RESET << std::endl;
+    int index = 1;
+    for (const auto& command : commandHistory) {
+        std::cout << index++ << ": " << command << std::endl;
+    }
+}
+
+void Shelld::moveFileOrDirectory(const std::vector<std::string>& args){
+ if (args.size() < 3) { // Ensure there are source and destination arguments
+        std::cerr << "mv: missing operand\n";
+        return;
+    }
+
+    const std::string& source = args[1];
+    const std::string& destination = args[2];
+
+    struct stat statBuf;
+
+    // Check if the source exists
+    if (stat(source.c_str(), &statBuf) != 0) {
+        std::cerr << "mv: source file/directory does not exist: " << source << std::endl;
+        return;
+    }
+
+    // Check if the destination is a directory
+    if (stat(destination.c_str(), &statBuf) == 0 && S_ISDIR(statBuf.st_mode)) {
+        // If destination is a directory, append the source file name to it
+        std::string newDestination = destination + "/" + source.substr(source.find_last_of("/") + 1);
+        if (rename(source.c_str(), newDestination.c_str()) == 0) {
+            std::cout << "Moved: " << source << " -> " << newDestination << std::endl;
+        } else {
+            std::cerr << "mv: failed to move: " << strerror(errno) << std::endl;
+        }
+    } else {
+        // If destination is not a directory, just rename the source file
+        if (rename(source.c_str(), destination.c_str()) == 0) {
+            std::cout << "Renamed: " << source << " -> " << destination << std::endl;
+        } else {
+            std::cerr << "mv: failed to rename: " << strerror(errno) << std::endl;
+        }
+    }
+
+}
+
+void Shelld::renameCommand(const std::vector<std::string>& args) {
+    if (args.size() < 3) {
+        std::cerr << "rename: missing operands\n";
+        return;
+    }
+
+    const std::string& oldName = args[1];
+    const std::string& newName = args[2];
+
+    if (rename(oldName.c_str(), newName.c_str()) == 0) {
+        std::cout << "File/Directory renamed: " << oldName << " -> " << newName << std::endl;
+    } else {
+        std::cerr << "Error renaming file: " << oldName << " to " << newName << std::endl;
+    }
+}
+
+void Shelld::dudeCommand(std::string nameofpc){
+
+ std::cout << YELLOW << "Good day, " << nameofpc << " !" << RESET << std::endl;
+ std::cout << BLUE << "This is a small tour above the shelld. " << RESET << std::endl;
+ std::cout << BOLD << "What is Shelld ?" << RESET << std::endl;
+ std::cout << "Overall it is a custom unix systems compatible shell that can be used at personal computers and etc. It is pretty clear, reader friendly" << std::endl;
+ std::cout << "and is useful in most of the daily tasks. It is important to mention that it was created as just a fun project that would make something interesting to play around and" << std::endl;
+ std::cout << "be very cool in appearence and just fix what other shells are doing different. Shelld can not be better in any way. It is just something i was interested." << std::endl;
+ std::cout << " \n";
+ std::cout << BOLD << "What we mean?" << RESET << std::endl;
+ std::cout << "Shelld is just a project that was made for me to undertand shells better, it is fun and yes actually can be usable, but bash for example is a freaking set of countless tools\n";
+ std::cout << "so... it is something like a meme project and kinda can be considered a joke lol:))\n";
+ std::cout << BOLD << "How to actually use?" << RESET << std::endl;
+ std::cout << "This shell tries to resemble something like bash, but simplier and more primitive. \n";
+ std::cout << "Use different commands with flags or without them similarly to bash that you can find by typing //wha// in terminal \n";
+}
+
+void Shelld::setPromptColor(const std::string& color) {
+    auto it = colorMap.find(color);
+    if (it != colorMap.end()) {
+        promptColor = it->second;
+        std::cout << "Prompt color changed to " << color << std::endl;
+    } else {
+        std::cout << "Invalid color. Available colors are: red, green, yellow, blue, magenta, cyan, white." << std::endl;
     }
 }
