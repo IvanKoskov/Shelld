@@ -10,7 +10,7 @@ Very important to note that it is just a parody, custom version with not ALL fun
 
 
 ## Installation
-1. Clone the repository:
+1. Clone the repository by typing this in your terminal (git should be installed):
    ```bash
    git clone https://github.com/IvanKoskov/Shelld.git
    ```
