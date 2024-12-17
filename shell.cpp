@@ -735,21 +735,26 @@ void Shelld::searchFile(const std::vector<std::string>& args) {
     file.close();
 }
 
-void Shelld::setPrompt(const std::vector<std::string>& args, std::string& promttext) {
+void Shelld::setPrompt(const std::vector<std::string>& args, std::string& promptText) {
     if (args.size() < 2) {
         std::cout << "Usage: setprompt <new_prompt>" << std::endl;
         return;
     }
 
-    // Extract the new prompt from the arguments (skip the command itself)
-    std::string new_prompt = args[1];  // The first argument after 'setprompt' is the new prompt text
-    for (size_t i = 2; i < args.size(); ++i) {
-        new_prompt += " " + args[i];  // Add any additional arguments to the new prompt
+    // Concatenate all arguments into the new prompt text
+    std::string newPrompt;
+    for (size_t i = 1; i < args.size(); ++i) {
+        if (!newPrompt.empty()) {
+            newPrompt += " ";  // Add a space between arguments
+        }
+        newPrompt += args[i];
     }
 
-    promttext = new_prompt;  // Update the original prompt text
-    std::cout << "Prompt changed to: " << promttext << std::endl;
+    // Update the prompt text and append a space for better UX
+    promptText = newPrompt + " ";
+    std::cout << "Prompt changed to: " << promptText << std::endl;
 }
+
 
 void Shelld::redirectOutput(const std::vector<std::string>& args) {
     bool append = false;
