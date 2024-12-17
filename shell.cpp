@@ -22,6 +22,13 @@
             continue;
         }
 
+        if (input.find(">") != std::string::npos || input.find(">>") != std::string::npos) {
+            std::vector<std::string> args = parseInput(input);
+            redirectOutput(args);
+        }
+
+
+
         else if (input == "flash" || input == "clear") {
         flashScreen();
 
@@ -37,10 +44,21 @@
     tarCommand(args);
        }
 
+       else if (input == "free") {
+
+       freeCommand();
+
+       }
+
         else if (input.rfind("chow", 0) == 0) {
             std::vector<std::string> args = parseInput(input);
             chownCommand(args);
         }
+
+        else if (input.rfind("kill", 0) == 0) {
+    std::vector<std::string> args = parseInput(input);
+    killCommand(args);
+}
 
         else if (input.rfind("chamo", 0) == 0) {
     std::vector<std::string> args = parseInput(input);
@@ -72,11 +90,26 @@
 
         }
 
+        else if (input == "up_time") {
+         uptimeCommand();
+
+        }
+
+        else if (input == "df") {
+         dfCommand();
+
+        }
+
          else if (input.rfind("dldir", 0) == 0) {
          std::vector<std::string> args = parseInput(input); 
          deleteDirectoryRecursively(args);
 
         }
+
+        else if (input.find("|") != std::string::npos) {
+    std::vector<std::string> args = parseInput(input);
+    pipeCommand(args);  // Handle piped command
+}
 
         else if (input.rfind("dlt", 0) == 0) {
          std::vector<std::string> args = parseInput(input); 
@@ -297,6 +330,12 @@ void Shelld::helpCommand() {
     std::cout << MAGENTA << "cp: copy contents and other stuff" << RESET << std::endl;
     std::cout << MAGENTA << "chamo: change the permissions and allow other file patterns " << RESET << std::endl;
     std::cout << MAGENTA << "wha: Help" << RESET << std::endl;
+    std::cout << "tar: creating tars, extracting them and etc." << std::endl;
+    std::cout << "> / >>: redirect output and etc. Big support for commands." << std::endl;
+    std::cout << "| : piping like in bash!" << std::endl;
+    std::cout << "up_time: stats about how long you are booted in" << std::endl;
+    std::cout << "df: df like in bash. System stats and etc." << std::endl;
+    std::cout << YELLOW << "kill: be careful! this command can kill system processes, there is no cancel option!" << RESET << std::endl;
     std::cout << "tar: creating tars, extracting them and etc." << std::endl;
     std::cout << "LPESHKA: process monitoring stuff, pids and other info for unix systems." << std::endl;
     std::cout << "srch: just for search like in bash. Helps to find any key word or text from the file provided." << std::endl;
@@ -710,4 +749,165 @@ void Shelld::setPrompt(const std::vector<std::string>& args, std::string& promtt
 
     promttext = new_prompt;  // Update the original prompt text
     std::cout << "Prompt changed to: " << promttext << std::endl;
+}
+
+void Shelld::redirectOutput(const std::vector<std::string>& args) {
+    bool append = false;
+    size_t redir_pos = args.size();
+
+    // Find if the output is being redirected (either > or >>)
+    for (size_t i = 0; i < args.size(); ++i) {
+        if (args[i] == ">" || args[i] == ">>") {
+            redir_pos = i;
+            append = (args[i] == ">>");
+            break;
+        }
+    }
+
+    if (redir_pos == args.size()) {
+        std::cerr << "No redirection operator found.\n";
+        return;
+    }
+
+    // Now extract the file to which to redirect
+    std::string output_file = args[redir_pos + 1];
+
+    // Open the file with the correct mode (append or overwrite)
+    std::ofstream out_file;
+    if (append) {
+        out_file.open(output_file, std::ios::app);  // Open for appending
+    } else {
+        out_file.open(output_file, std::ios::trunc);  // Open for overwriting
+    }
+
+    if (!out_file.is_open()) {
+        std::cerr << "Failed to open the file for writing: " << output_file << "\n";
+        return;
+    }
+
+    // Now execute the command and redirect the output
+    // Assuming the command doesn't need to be executed again for the redirection
+    std::vector<std::string> command_args(args.begin(), args.begin() + redir_pos);
+    executeCommand(command_args, out_file);  // Pass the output stream to the command execution
+
+    out_file.close();
+}
+
+
+void Shelld::executeCommand(const std::vector<std::string>& args, std::ofstream& out_file) {
+    // Example of executing a simple command like `echo`
+    if (args[0] == "echo") {
+        for (size_t i = 1; i < args.size(); ++i) {
+            if (i > 1) out_file << " ";  // Add space between arguments
+            out_file << args[i];
+        }
+        out_file << "\n";
+    }
+    // Handle other commands similarly...
+}
+
+void Shelld::pipeCommand(const std::vector<std::string>& args) {
+    // Find the index of the pipe symbol
+    auto pipe_index = std::find(args.begin(), args.end(), "|");
+
+    if (pipe_index != args.end()) {
+        // Split the arguments into two commands
+        std::vector<std::string> first_command(args.begin(), pipe_index);
+        std::vector<std::string> second_command(pipe_index + 1, args.end());
+
+        // Create a pipe
+        int pipefd[2];
+        if (pipe(pipefd) == -1) {
+            perror("pipe");
+            return;
+        }
+
+        // Fork the first child process
+        pid_t pid1 = fork();
+        if (pid1 == -1) {
+            perror("fork");
+            return;
+        }
+
+        if (pid1 == 0) {
+            // In the first child process
+            // Close the read end of the pipe
+            close(pipefd[0]);
+            // Redirect stdout to the write end of the pipe
+            dup2(pipefd[1], STDOUT_FILENO);
+            close(pipefd[1]);  // Close the original pipe write end
+
+            // Execute the first command
+            std::vector<const char*> cmd1;
+            for (const auto& arg : first_command) {
+                cmd1.push_back(arg.c_str());
+            }
+            cmd1.push_back(nullptr);  // Null-terminate the argument list
+            execvp(cmd1[0], (char * const*)cmd1.data());
+            perror("execvp");
+            exit(1);
+        }
+
+        // Fork the second child process
+        pid_t pid2 = fork();
+        if (pid2 == -1) {
+            perror("fork");
+            return;
+        }
+
+        if (pid2 == 0) {
+            // In the second child process
+            // Close the write end of the pipe
+            close(pipefd[1]);
+            // Redirect stdin to the read end of the pipe
+            dup2(pipefd[0], STDIN_FILENO);
+            close(pipefd[0]);  // Close the original pipe read end
+
+            // Execute the second command
+            std::vector<const char*> cmd2;
+            for (const auto& arg : second_command) {
+                cmd2.push_back(arg.c_str());
+            }
+            cmd2.push_back(nullptr);  // Null-terminate the argument list
+            execvp(cmd2[0], (char * const*)cmd2.data());
+            perror("execvp");
+            exit(1);
+        }
+
+        // Parent process
+        close(pipefd[0]);
+        close(pipefd[1]);
+        waitpid(pid1, nullptr, 0);  // Wait for the first child to finish
+        waitpid(pid2, nullptr, 0);  // Wait for the second child to finish
+    } else {
+        std::cout << "No pipe found in the command!" << std::endl;
+    }
+}
+
+void Shelld::uptimeCommand() {
+    system("uptime");
+}
+
+void Shelld::freeCommand() {
+    system("vm_stat");
+}
+
+void Shelld::dfCommand() {
+    system("df -h");
+}
+
+void Shelld::killCommand(const std::vector<std::string>& args) {
+    if (args.size() != 2) {
+        std::cout << "Usage: kill <PID>" << std::endl;
+        return;
+    }
+
+    int pid = std::stoi(args[1]);  // Convert the second argument to an integer (PID)
+    
+    // Attempt to kill the process
+    if (kill(pid, SIGTERM) == 0) {
+        std::cout << "Process " << pid << " has been terminated." << std::endl;
+    } else {
+        perror("Error killing process");
+    }
 }

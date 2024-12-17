@@ -15,10 +15,13 @@
 #include <cstring>      
 #include <dirent.h>
 #include <deque>
+#include <signal.h>
 #include <map>
 #include <sstream>
 #include <filesystem> 
 #include <cstdlib>
+#include <fcntl.h>
+#include <sys/wait.h>
 //our shell colrs. Red does not work by some reason...
 #define RESET   "\033[0m"
 #define BLACK   "\033[30m"
@@ -52,7 +55,7 @@ private:
    
    std::string readInput(); // Read 
     
-    void executeCommand(const std::vector<std::string>& args); // Execute the command
+    void executeCommand(const std::vector<std::string>& args, std::ofstream& out_file); // Execute the command
    
     void listDirectoryContents(const std::vector<std::string>& args);
     
@@ -115,6 +118,18 @@ private:
     void searchFile(const std::vector<std::string>& args);
 
     void setPrompt(const std::vector<std::string>& args, std::string& promttext);
+
+    void redirectOutput(const std::vector<std::string>& args);
+
+    void pipeCommand(const std::vector<std::string>& args);
+
+    void uptimeCommand();
+
+    void freeCommand();
+
+    void dfCommand();
+
+    void killCommand(const std::vector<std::string>& args);
 };
 
 
