@@ -27,11 +27,27 @@
 
         }
 
+        else if (input.rfind("chow", 0) == 0) {
+            std::vector<std::string> args = parseInput(input);
+            chownCommand(args);
+        }
+
+        else if (input.rfind("chamo", 0) == 0) {
+    std::vector<std::string> args = parseInput(input);
+    chmodCommand(args);
+      }
+
+
         else if (input == "nowtime") {
        dateCommand();
 
 
 
+        }
+
+        else if (input.rfind("cp", 0) == 0) {
+    std::vector<std::string> args = parseInput(input);
+    copyCommand(args);
         }
 
         else if (input == "dude") {
@@ -255,6 +271,9 @@ void Shelld::helpCommand() {
     std::cout << BLUE << "flash // Clear : Both can clear the screen or just leave the entry point for Shelld" << RESET << std::endl;
     std::cout << BLUE << "rename: change name of files or directories" << RESET << std::endl;
     std::cout << BLUE << "mv: standard command to move everythings as you like" << RESET << std::endl;
+    std::cout << MAGENTA << "chow: change owner like in bash actually" << RESET << std::endl;
+    std::cout << MAGENTA << "cp: copy contents and other stuff" << RESET << std::endl;
+    std::cout << MAGENTA << "chamo: change the permissions and allow other file patterns " << RESET << std::endl;
     std::cout << MAGENTA << "wha: Help" << RESET << std::endl;
     std::cout << CYAN << "dude: general documentation and instructions" << RESET << std::endl;
     std::cout << YELLOW << "+-------------------------------+" << RESET << std::endl;
@@ -466,3 +485,92 @@ void Shelld::setPromptColor(const std::string& color) {
         std::cout << "Invalid color. Available colors are: red, green, yellow, blue, magenta, cyan, white." << std::endl;
     }
 }
+
+
+void Shelld::copyCommand(const std::vector<std::string>& args) {
+    if (args.size() < 3) {
+        std::cerr << "cp: missing file/directory or destination operand\n";
+        return;
+    }
+
+    const std::string& source = args[1];
+    const std::string& destination = args[2];
+
+    try {
+        if (!std::filesystem::exists(source)) {
+            std::cerr << "cp: source '" << source << "' does not exist\n";
+            return;
+        }
+
+        if (std::filesystem::is_directory(source)) {
+            // Use recursive copy for directories
+            std::filesystem::copy(
+                source, destination, 
+                std::filesystem::copy_options::recursive | std::filesystem::copy_options::overwrite_existing
+            );
+            std::cout << "Directory copied successfully from '" << source << "' to '" << destination << "'\n";
+        } else {
+            // Use file copy for individual files
+            std::filesystem::copy_file(
+                source, destination, 
+                std::filesystem::copy_options::overwrite_existing
+            );
+            std::cout << "File copied successfully from '" << source << "' to '" << destination << "'\n";
+        }
+    } catch (const std::filesystem::filesystem_error& e) {
+        std::cerr << "cp: error copying: " << e.what() << '\n';
+    }
+}
+
+void Shelld::chmodCommand(const std::vector<std::string>& args) {
+    if (args.size() < 3) { // At least "chmod", mode, and one file
+        std::cerr << "chmod: missing operand\n";
+        return;
+    }
+
+    // Convert the mode argument (e.g., "755") to an integer
+    mode_t mode;
+    try {
+        mode = std::stoul(args[1], nullptr, 8); // Convert from octal
+    } catch (const std::exception&) {
+        std::cerr << "chmod: invalid mode: " << args[1] << "\n";
+        return;
+    }
+
+    // Apply the mode to each file
+    for (size_t i = 2; i < args.size(); ++i) {
+        const std::string& file = args[i];
+        if (chmod(file.c_str(), mode) == 0) {
+            std::cout << "Changed mode of " << file << " to " << args[1] << "\n";
+        } else {
+            std::perror(("chmod: cannot change mode of " + file).c_str());
+        }
+    }
+}
+
+void Shelld::chownCommand(const std::vector<std::string>& args) {
+    if (args.size() < 3) {
+        std::cerr << "chown: missing operand\n";
+        return;
+    }
+
+    const std::string& owner = args[1];
+    const std::string& file = args[2];
+    struct passwd* pw = getpwnam(owner.c_str());
+
+    if (pw == nullptr) {
+        std::cerr << "chown: invalid user\n";
+        return;
+    }
+
+    uid_t uid = pw->pw_uid;
+    gid_t gid = pw->pw_gid;
+
+    if (chown(file.c_str(), uid, gid) != 0) {
+        std::cerr << "chown: failed to change ownership: " << strerror(errno) << std::endl;
+    } else {
+        std::cout << "Ownership of '" << file << "' changed to " << owner << std::endl;
+    }
+}
+
+

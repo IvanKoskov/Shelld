@@ -17,6 +17,7 @@
 #include <deque>
 #include <map>
 #include <sstream>
+#include <filesystem> 
 //our shell colrs. Red does not work by some reason...
 #define RESET   "\033[0m"
 #define BLACK   "\033[30m"
@@ -45,36 +46,64 @@ public:
    void runShell(); //it is the entry and access to all functionality of the shell
 
 private:
+    
     void displayPrompt(); 
-    std::string readInput(); // Read 
+   
+   std::string readInput(); // Read 
     
     void executeCommand(const std::vector<std::string>& args); // Execute the command
+   
     void listDirectoryContents(const std::vector<std::string>& args);
+    
     void workingDirectory();
+    
     void changeDirectory(const std::vector<std::string>& args);
+    
     std::vector<std::string> parseInput(const std::string& input);
+    
     void currentUser();
+    
     void echoCommand(const std::vector<std::string>& args);
+    
     void helpCommand();
+    
     void crCommand(const std::vector<std::string>& args);
+    
     void flashScreen();
+    
     void deleteFiles(const std::vector<std::string>& args);
+    
     void makeDirectory(const std::vector<std::string>& args);
+    
     void deleteDirectoryRecursively(const std::vector<std::string>& args);
+    
     void readCommand(const std::vector<std::string>& args);
+    
     void dateCommand();
+    
     std::deque<std::string> commandHistory; 
+    
     void printHistory();
+   
     void moveFileOrDirectory(const std::vector<std::string>& args);
+    
     void renameCommand(const std::vector<std::string>& args);
+    
     void dudeCommand(std::string nameofpc);
+    
     void setPromptColor(const std::string& color);
+    
     std::string promptColor = RESET;  // Default prompt color
+    
     std::map<std::string, std::string> colorMap = {
         {"red", RED}, {"green", GREEN}, {"yellow", YELLOW},
         {"blue", BLUE}, {"magenta", MAGENTA}, {"cyan", CYAN},
         {"white", WHITE}
     };
+
+    void copyCommand(const std::vector<std::string>& args);
+    void chmodCommand(const std::vector<std::string>& args);
+    void chownCommand(const std::vector<std::string>& args);
 };
 
 
