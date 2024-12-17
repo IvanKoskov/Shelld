@@ -18,6 +18,7 @@
 #include <map>
 #include <sstream>
 #include <filesystem> 
+#include <cstdlib>
 //our shell colrs. Red does not work by some reason...
 #define RESET   "\033[0m"
 #define BLACK   "\033[30m"
@@ -46,8 +47,8 @@ public:
    void runShell(); //it is the entry and access to all functionality of the shell
 
 private:
-    
-    void displayPrompt(); 
+    std::string promttext = "From Shelld > ";
+    void displayPrompt(std::string promttext); 
    
    std::string readInput(); // Read 
     
@@ -102,9 +103,20 @@ private:
     };
 
     void copyCommand(const std::vector<std::string>& args);
+
     void chmodCommand(const std::vector<std::string>& args);
+
     void chownCommand(const std::vector<std::string>& args);
+
+    void tarCommand(const std::vector<std::string>& args);
+
+    void listProcesses();
+
+    void searchFile(const std::vector<std::string>& args);
+
+    void setPrompt(const std::vector<std::string>& args, std::string& promttext);
 };
+
 
 
 

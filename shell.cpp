@@ -9,7 +9,7 @@
     std::cout << YELLOW << std::put_time(std::localtime(&currentTime), "Now on %Y-%m-%d %H:%M:%S") << RESET << std::endl;
 
     while (true) {  
-        displayPrompt();  
+        displayPrompt(promttext);  
         std::string input = readInput();
           commandHistory.push_back(input);
 
@@ -26,6 +26,16 @@
         flashScreen();
 
         }
+
+        else if (input.rfind("setentry", 0) == 0) {
+          std::vector<std::string> args = parseInput(input);
+            setPrompt(args, promttext);
+        }
+
+        else if (input.rfind("tar", 0) == 0) {
+    std::vector<std::string> args = parseInput(input);
+    tarCommand(args);
+       }
 
         else if (input.rfind("chow", 0) == 0) {
             std::vector<std::string> args = parseInput(input);
@@ -91,8 +101,13 @@
         }
 
 
-        else if (input == "LF") {
+        else if (input == "lv") {
             break;
+        }
+
+        else if (input == "LPESHKA") {
+          listProcesses();
+
         }
 
          //same as in bash
@@ -119,10 +134,17 @@
     moveFileOrDirectory(args);
 }
 
-else if (input.rfind("rename", 0) == 0) {
+ else if (input.rfind("rename", 0) == 0) {
     std::vector<std::string> args = parseInput(input);
     renameCommand(args);
-}
+ }
+
+  
+
+ else if (input.rfind("srch", 0) == 0) {
+    std::vector<std::string> args = parseInput(input);
+    searchFile(args);
+ }
 
   else if (input.rfind("setpromptcolor", 0) == 0) {
             std::stringstream ss(input);
@@ -149,8 +171,8 @@ else if (input.rfind("rename", 0) == 0) {
     }
 }
 
-void Shelld::displayPrompt() {
-    std::cout << promptColor << "From Shelld > " << RESET;  // Display prompt
+void Shelld::displayPrompt(std::string promttext) {
+    std::cout << promptColor << promttext << RESET;  // Display prompt
     std::cout.flush();  // Ensure it's printed immediately
 }
 
@@ -275,6 +297,10 @@ void Shelld::helpCommand() {
     std::cout << MAGENTA << "cp: copy contents and other stuff" << RESET << std::endl;
     std::cout << MAGENTA << "chamo: change the permissions and allow other file patterns " << RESET << std::endl;
     std::cout << MAGENTA << "wha: Help" << RESET << std::endl;
+    std::cout << "tar: creating tars, extracting them and etc." << std::endl;
+    std::cout << "LPESHKA: process monitoring stuff, pids and other info for unix systems." << std::endl;
+    std::cout << "srch: just for search like in bash. Helps to find any key word or text from the file provided." << std::endl;
+    std::cout << "setentry: customize the promt (aka the entry for each line). just write //setentry ''Your new entry''. The syntax is pretty clear." << std::endl;
     std::cout << CYAN << "dude: general documentation and instructions" << RESET << std::endl;
     std::cout << YELLOW << "+-------------------------------+" << RESET << std::endl;
 }
@@ -474,6 +500,14 @@ void Shelld::dudeCommand(std::string nameofpc){
  std::cout << BOLD << "How to actually use?" << RESET << std::endl;
  std::cout << "This shell tries to resemble something like bash, but simplier and more primitive. \n";
  std::cout << "Use different commands with flags or without them similarly to bash that you can find by typing //wha// in terminal \n";
+ std::cout << "Though it is just a project for my practice and studies maybe it will be actually somehow very useful to study or something. \n";
+ std::cout << " \n";
+ std::cout << BOLD << "It is actually plain X)" << RESET << std::endl;
+ std::cout << "The shell it self has to things to undertsand\n";
+ std::cout << "• entry point : From Shelld \n";
+ std::cout << "What essentially means you are good to go.. input the command!\n";
+ std::cout << "• Flags with which you execute your commands cause it can affect your pc\n";
+
 }
 
 void Shelld::setPromptColor(const std::string& color) {
@@ -573,4 +607,107 @@ void Shelld::chownCommand(const std::vector<std::string>& args) {
     }
 }
 
+void Shelld::tarCommand(const std::vector<std::string>& args) {
+    if (args.size() < 3) {
+        std::cout << "Usage: tar [options] [archive] [files...]" << std::endl;
+        return;
+    }
 
+    std::string command;  // Start with an empty command string
+
+    // Build the command by adding each argument
+    for (const auto& arg : args) {
+        command += arg + " ";  // Concatenate each argument
+    }
+
+    // Check for conflicting options like -r or -t
+    if (command.find("-r") != std::string::npos && command.find("-t") != std::string::npos) {
+        std::cout << "Error: Can't specify both -r and -t" << std::endl;
+        return;
+    }
+
+    // Print the command being executed for debugging purposes
+    std::cout << "Running command: " << command << std::endl;
+
+    // Execute the tar command
+    int result = std::system(command.c_str());
+
+    if (result != 0) {
+        std::cout << "Error executing tar command!" << std::endl;
+    }
+}
+
+void Shelld::listProcesses() {
+    FILE *fp = popen("ps aux", "r");  // macOS uses `ps aux` for process listing
+    if (fp == nullptr) {
+        std::cerr << "Error executing ps command!" << std::endl;
+        return;
+    }
+
+    char buffer[512];  // Buffer to hold each line of output
+    std::string line;
+
+    // Print table header (adjusted for macOS ps format)
+    std::cout << "USER\tPID\t%CPU\t%MEM\tCOMMAND" << std::endl;
+    std::cout << "-----------------------------------------------" << std::endl;
+
+    // Skip the first line (headers)
+    fgets(buffer, sizeof(buffer), fp);
+
+    // Read and print each line of output
+    while (fgets(buffer, sizeof(buffer), fp)) {
+        std::cout << buffer;
+    }
+
+    fclose(fp);
+}
+
+void Shelld::searchFile(const std::vector<std::string>& args) {
+    if (args.size() != 2) {
+        std::cout << "Usage: search <filename> <search_string>" << std::endl;
+        return;
+    }
+
+    std::string filename = args[0];
+    std::string search_string = args[1];
+
+    std::ifstream file(filename);
+    if (!file.is_open()) {
+        std::cout << "Error opening file: " << filename << std::endl;
+        return;
+    }
+
+    std::string line;
+    size_t line_number = 0;
+    bool found = false;
+
+    while (std::getline(file, line)) {
+        line_number++;
+        if (line.find(search_string) != std::string::npos) {
+            std::cout << "Found at line " << line_number << ": " << line << std::endl;
+            found = true;
+        }
+    }
+
+    if (!found) {
+        std::cout << "No matches found for '" << search_string << "' in " << filename << std::endl;
+    }
+
+    file.close();
+}
+
+void Shelld::setPrompt(const std::vector<std::string>& args, std::string& promttext) {
+    if (args.size() < 2) {
+        std::cout << "Usage: setprompt <new_prompt>" << std::endl;
+        return;
+    }
+
+    // Extract the new prompt from the arguments (skip the command itself)
+    std::string new_prompt = args[1];  // The first argument after 'setprompt' is the new prompt text
+    for (size_t i = 2; i < args.size(); ++i) {
+        new_prompt += " " + args[i];  // Add any additional arguments to the new prompt
+    }
+
+    promttext = new_prompt;  // Update the original prompt text
+    std::cout << "Prompt changed to: " << promttext << std::endl;
+}
