@@ -16,7 +16,7 @@ Very important to note that it is just a parody, custom version with not ALL fun
 
 ## Purpose, related and etc
 
-<img width="512" alt="kisspng-terminal-macos-unix-swipe-5abeb39f770cc5 3806324615224472634876" src="https://github.com/user-attachments/assets/c42446e3-8de6-40c9-8604-692b750fcbda" />
+<img width="300" alt="kisspng-terminal-macos-unix-swipe-5abeb39f770cc5 3806324615224472634876" src="https://github.com/user-attachments/assets/c42446e3-8de6-40c9-8604-692b750fcbda" />
 
 Very important to highlight that asides from just being just a ```learning project and a fun thingy``` to test out the Shelld has its own way to run primitive scripts in terms of syntax.
 Just use already installed commands to do it. in future more fun stuff will be added if it will...
