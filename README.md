@@ -8,6 +8,8 @@ The project is focused on C++ implementation mostly as a goal.
 
 Very important to note that it is just a parody, custom version with not ALL functionality of a modern shell. Yes, it is just made to be made...
 
+> [!IMPORTANT]
+> The whole point is to undertand how basically shell works, lost of things are not available and wont be with a big chance. Mostly it is a very can be called primitive thing.
 
 ## Installation
 1. Clone the repository by typing this in your terminal (git should be installed):
