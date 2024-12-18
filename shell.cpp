@@ -217,6 +217,12 @@ else if (input.rfind("fg", 0) == 0) {
 
         }
 
+        else if (input.rfind("exec", 0) == 0) {
+         std::vector<std::string> args = parseInput(input);
+            executeScript(args);
+            
+        }
+
         else if (input.rfind("cr", 0) == 0) {
     std::vector<std::string> args = parseInput(input);
     crCommand(args); 
@@ -1187,6 +1193,57 @@ void Shelld::wifeCommand() {
 
 
 
+}
+
+void Shelld::executeScript(const std::vector<std::string>& args) {
+    if (args.size() != 2) {  // Ensure there's only one argument (the script file)
+        std::cerr << "exec: missing or too many arguments!\n";
+        return;
+    }
+
+    const std::string& sourcefile = args[1];
+
+    // Check if the file exists
+    try {
+        if (!std::filesystem::exists(sourcefile)) {
+            std::cerr << "exec: source file '" << sourcefile << "' does not exist\n";
+            return;
+        }
+    } catch (const std::exception& e) {
+        std::cerr << "exec: error checking file existence: " << e.what() << "\n";
+        return;
+    }
+
+    // Open the script file for reading
+    std::ifstream scriptFile(sourcefile);
+    if (!scriptFile.is_open()) {
+        std::cerr << "exec: failed to open script file '" << sourcefile << "'\n";
+        return;
+    }
+
+    std::string line;
+    while (std::getline(scriptFile, line)) {
+        // Skip empty lines or lines that are just spaces
+        if (line.empty() || std::all_of(line.begin(), line.end(), ::isspace)) {
+            continue;
+        }
+
+        //  same logic as your shelld's command parsing
+        std::vector<std::string> args = parseInput(line);  
+
+        // Check the first argument (command) and execute accordingly
+        if (args[0] == "echo") {
+            echoCommand(args);
+        } else if (args[0] == "flash" || args[0] == "clear") {
+            flashScreen();
+        } 
+        
+        else {
+            std::cout << "Unknown command, keyword or syntax in script: " << args[0] << "\n";
+        }
+    }
+
+    scriptFile.close();  // Don't forget to close the file
 }
 
 

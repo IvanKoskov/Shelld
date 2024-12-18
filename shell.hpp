@@ -160,6 +160,8 @@ private:
     void cleanupJobs();
 
     void wifeCommand();
+
+    void executeScript(const std::vector<std::string>& args);
 };
 
 
