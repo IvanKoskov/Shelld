@@ -1,6 +1,8 @@
 # Shelld
 Shell for all unix systems 
 
+<img width="634" alt="Screenshot 2567-12-18 at 23 12 08" src="https://github.com/user-attachments/assets/06386256-3d80-4fd0-877b-f1b712ef00d5" />
+
 Shelld is clear, useful, straight forward shell that can be used at home and can be considered very easy.
 So, far this is a free project that is started as hobby to make a custom shell. It can not be compared to others yet, because is not as rich in functionality yet.
 
