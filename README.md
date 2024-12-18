@@ -14,6 +14,16 @@ Very important to note that it is just a parody, custom version with not ALL fun
 > The whole point is to undertand how basically shell works, lost of things are not available and wont be with a big chance. Mostly it is a very can be called primitive thing.
 > the only thing it is, but a toy. Ye just look at wat i have made. But still))
 
+## Purpose, related and etc
+
+Very important to highlight that asides from just being just a learning project and a fun thingy to test out the Shelld has its own way to run primitive scripts in terms of syntax.
+Just use already installed commands to do it. in future more fun stuff will be added if it will...
+
+Just type    ```
+   exec myscript
+     ```
+   
+
 ## Installation
 1. Clone the repository by typing this in your terminal (git should be installed):
    ```bash
