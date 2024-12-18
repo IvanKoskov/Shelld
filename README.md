@@ -18,7 +18,7 @@ Very important to note that it is just a parody, custom version with not ALL fun
 
 <img width="150" alt="kisspng-terminal-macos-unix-swipe-5abeb39f770cc5 3806324615224472634876" src="https://github.com/user-attachments/assets/c42446e3-8de6-40c9-8604-692b750fcbda" />
 
-Very important to highlight that asides from just being just a ```learning project and a fun thingy``` to test out the Shelld has its own way to run primitive scripts in terms of syntax.
+Very important to highlight that asides from just being just a ```learning project and a fun thingy``` to test out the Shelld has its own way to run primitive scripts in terms of syntax. Terminal is a key thing and even small set of tools is cool more over when it is just simple and is a toy.
 Just use already installed commands to do it. in future more fun stuff will be added if it will...
 
 Just type    ```
@@ -26,6 +26,17 @@ Just type    ```
      ```
    It is no extension needed as it is just direclty read by a shell and after C++ executes.
    For now there are no loops, functions or something, it is  ONLY commands that you can just organize, customize and etc.
+
+## Who needs?
+
+This can be used on daily life terminal tasks and to just learn if you are not familiar with shell and terminal interaction.
+
+## Big disadvantages
+
+Mainly it is that shelld is not fully complete as a shell like bash and does not have some still useful things like code running and etc. 50/50 and ye there is no apt get (yet maybe).
+
+Btw the fact that it is c++ makes the shell funky .... kinda!
+
 
 ## Installation
 1. Clone the repository by typing this in your terminal (git should be installed):
