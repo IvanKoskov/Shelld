@@ -34,6 +34,66 @@
 
         }
 
+        else if (input.rfind("addjob", 0) == 0) {
+    std::vector<std::string> args = parseInput(input);
+    pid_t pid = std::stoi(args[1]); // Extract PID from command args
+    addJob(pid, args[2], true);  // Add job to job list
+    std::cout << "Job with PID " << pid << " added.\n";
+}
+
+else if (input == "listjobs") {
+    listJobs();  // List all jobs
+}
+
+else if (input.rfind("removejob", 0) == 0) {
+    std::vector<std::string> args = parseInput(input);
+    pid_t pid = std::stoi(args[1]);  // Extract PID from command args
+    removeJob(pid);  // Remove the job
+    std::cout << "Job with PID " << pid << " removed.\n";
+}
+
+else if (input.rfind("runbg", 0) == 0) {
+    std::vector<std::string> args = parseInput(input);
+    pid_t pid = fork();
+    if (pid == 0) {
+        // Child process
+        std::vector<const char*> cmd_args;
+        for (const auto& arg : args) {
+            cmd_args.push_back(arg.c_str());
+        }
+        cmd_args.push_back(nullptr);  // Null-terminate the argument list
+        execvp(cmd_args[0], (char* const*)cmd_args.data());
+        perror("execvp");
+        exit(0);
+    } else if (pid > 0) {
+        // Parent process
+        addJob(pid, args[1], true);  // Add job to job list
+        std::cout << "Job [" << next_job_id - 1 << "] started: " << args[1] << "\n";
+    } else {
+        std::cerr << "Failed to fork process.\n";
+    }
+}
+
+
+
+
+
+else if (input.rfind("fg", 0) == 0) {
+    std::vector<std::string> args = parseInput(input);
+    pid_t pid = std::stoi(args[1]);  // Extract PID
+    Job* job = findJobByPid(pid);
+    if (job) {
+        // Bring job to foreground by waiting for it to finish
+        waitpid(pid, nullptr, 0);
+        removeJob(pid);  // Remove job after it finishes
+    } else {
+        std::cout << "Job " << pid << " not found.\n";
+    }
+}
+
+
+
+
         else if (input.rfind("setentry", 0) == 0) {
           std::vector<std::string> args = parseInput(input);
             setPrompt(args, promttext);
@@ -162,6 +222,16 @@
     crCommand(args); 
 }
 
+else if (input == "pidss") {
+helppidCommand();
+
+}
+
+else if (input == "wife") {
+wifeCommand();
+
+}
+
      else if (input.rfind("mv", 0) == 0) {
     std::vector<std::string> args = parseInput(input);
     moveFileOrDirectory(args);
@@ -189,6 +259,11 @@
         else if (input.rfind("ls", 0) == 0) { 
     std::vector<std::string> args = parseInput(input); 
     listDirectoryContents(args);  
+  }
+
+  else if (input == "cleanjb") {
+   cleanupJobs();
+
   }
         
         else if (input == "dir") {
@@ -800,16 +875,122 @@ void Shelld::redirectOutput(const std::vector<std::string>& args) {
 
 
 void Shelld::executeCommand(const std::vector<std::string>& args, std::ofstream& out_file) {
-    // Example of executing a simple command like `echo`
+    if (args.empty()) return;
+
+    // Handle built-in commands like echo
     if (args[0] == "echo") {
         for (size_t i = 1; i < args.size(); ++i) {
             if (i > 1) out_file << " ";  // Add space between arguments
             out_file << args[i];
         }
         out_file << "\n";
+        return;
     }
-    // Handle other commands similarly...
+
+    // Handle job control commands
+    if (args[0] == "jobs") {
+        listJobs();
+        return;
+    }
+
+    if (args[0] == "bg") {
+        if (args.size() < 2) {
+            std::cout << "Usage: bg <job_id>\n";
+        } else {
+            int job_id = std::stoi(args[1]);
+            Job* job = findJobById(job_id);
+            if (job && !job->is_running) {
+                kill(job->pid, SIGCONT);  // Resume the job
+                job->is_running = true;
+                std::cout << "Job [" << job_id << "] resumed in background.\n";
+            } else {
+                std::cout << "Job not found or already running.\n";
+            }
+        }
+        return;
+    }
+
+    
+
+
+    
+
+
+    if (args[0] == "stop") {
+        if (args.size() < 2) {
+            std::cout << "Usage: stop <job_id>\n";
+        } else {
+            int job_id = std::stoi(args[1]);
+            Job* job = findJobById(job_id);
+            if (job && job->is_running) {
+                kill(job->pid, SIGSTOP);  // Stop the job
+                job->is_running = false;
+                std::cout << "Job [" << job_id << "] stopped.\n";
+            } else {
+                std::cout << "Job not found or already stopped.\n";
+            }
+        }
+        return;
+    }
+
+    if (args[0] == "fg") {
+        if (args.size() < 2) {
+            std::cout << "Usage: fg <job_id>\n";
+        } else {
+            int job_id = std::stoi(args[1]);
+            Job* job = findJobById(job_id);
+            if (job) {
+                int status;
+                waitpid(job->pid, &status, 0);  // Bring job to foreground
+                removeJob(job->pid);           // Remove job after it finishes
+                std::cout << "Job [" << job_id << "] finished in foreground.\n";
+            } else {
+                std::cout << "Job not found.\n";
+            }
+        }
+        return;
+    }
+
+    // Handle general commands and background tasks
+    bool is_background = !args.empty() && args.back() == "&";
+
+    std::vector<std::string> cmd_args = args;
+    if (is_background) {
+        cmd_args.pop_back();  // Remove "&" from arguments
+    }
+
+    pid_t pid = fork();
+    if (pid == -1) {
+        perror("fork");
+        return;
+    }
+
+    if (pid == 0) {
+        // In child process
+        std::vector<const char*> cmd;
+        for (const auto& arg : cmd_args) {
+            cmd.push_back(arg.c_str());
+        }
+        cmd.push_back(nullptr);  // Null-terminate the argument list
+        execvp(cmd[0], (char* const*)cmd.data());
+        perror("execvp");
+        exit(1);
+    } else {
+        // In parent process
+        if (is_background) {
+            addJob(pid, cmd_args[0], true);  // Add to job list
+            std::cout << "Job [" << next_job_id - 1 << "] started: " << cmd_args[0] << "\n";
+        } else {
+            waitpid(pid, nullptr, 0);  // Wait for process to finish
+        }
+    }
 }
+
+
+
+
+
+
 
 void Shelld::pipeCommand(const std::vector<std::string>& args) {
     // Find the index of the pipe symbol
@@ -916,3 +1097,99 @@ void Shelld::killCommand(const std::vector<std::string>& args) {
         perror("Error killing process");
     }
 }
+
+
+
+
+
+
+
+void Shelld::addJob(pid_t pid, const std::string& command, bool is_running) {
+    jobs.push_back({next_job_id++, pid, command, is_running});
+}
+
+void Shelld::listJobs() {
+    std::cout << "Job ID\tPID\tStatus\t\tCommand\n";
+    for (const auto& job : jobs) {
+        std::cout << job.job_id << "\t" << job.pid << "\t"
+                  << (job.is_running ? "Running" : "Stopped") << "\t\t"
+                  << job.command << "\n";
+    }
+}
+
+Shelld::Job* Shelld::findJobByPid(pid_t pid) {
+    for (auto& job : jobs) {
+        if (job.pid == pid) {
+            return &job;
+        }
+    }
+    return nullptr;
+}
+
+Shelld::Job* Shelld::findJobById(int job_id) {
+    for (auto& job : jobs) {
+        if (job.job_id == job_id) {
+            return &job;
+        }
+    }
+    return nullptr;
+}
+
+
+void Shelld::removeJob(pid_t pid) {
+    jobs.erase(std::remove_if(jobs.begin(), jobs.end(),
+                              [pid](const Job& job) { return job.pid == pid; }),
+               jobs.end());
+}
+
+
+void Shelld::helppidCommand() {
+    std::cout << "Available commands:\n";
+    std::cout << "  addjob <pid> <command> - Add a job\n";
+    std::cout << "  listjobs - List all jobs\n";
+    std::cout << "  removejob <pid> - Remove a job\n";
+    std::cout << "  jobstatus <pid> - Check job status\n";
+    std::cout << "  help - Display this help message\n";
+}
+
+void Shelld::cleanupJobs() {
+    for (auto it = jobs.begin(); it != jobs.end(); ) {
+        int status;
+        pid_t pid = waitpid(it->pid, &status, WNOHANG);  // Check if job has finished
+        if (pid > 0) {
+            // Job has finished
+            it = jobs.erase(it);  // Remove the finished job
+        } else {
+            ++it;
+        }
+    }
+}
+
+void Shelld::wifeCommand() {
+
+    std::cout << YELLOW << "               a8888b.    " << std::endl;
+    std::cout << "             d888888b." << std::endl;
+    std::cout << "             8P\"YP\"Y88" << std::endl;
+    std::cout << "             8|o||o|88               _________.__           .__  .__       .___" << std::endl;
+    std::cout << CYAN << "             8'    .88              /   _____/|  |__   ____ |  | |  |    __| _/" << std::endl;
+    std::cout << BLUE << "             8`._.' Y8.             \\_____  \\ |  |  \\_/ __ \\|  | |  |   / __ |" << std::endl;
+    std::cout << MAGENTA <<"            d/      `8b.            /        \\|   Y  \\  ___/|  |_|  |__/ /_/ |" << std::endl;
+    std::cout << WHITE << "           dP   .    Y8b.          /_______  /|___|  /\\___  >____/____/\\____ |" << std::endl;
+    std::cout << GREEN << "          d8:'  \"  `::88b                 \\/      \\/     \\/               \\/" << std::endl;
+    std::cout << "         d8\"         'Y88b" << std::endl;
+    std::cout << "        :8P    '      :888" << std::endl;
+    std::cout << "         8a.   :     _a88P" << std::endl;
+    std::cout << "       ._/'Yaa_:   .| 88P|" << std::endl;
+    std::cout << "       \\    YP\"    `| 8P  `." << std::endl;
+    std::cout << "       /     \\.___.d|    .'" << std::endl;
+    std::cout << "       `--..__)8888P`._.'" << std::endl;
+    
+
+
+
+}
+
+
+
+
+

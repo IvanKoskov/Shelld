@@ -48,8 +48,22 @@ class Shelld {
 public:
 
    void runShell(); //it is the entry and access to all functionality of the shell
+  
+struct Job {
+        int job_id;
+        pid_t pid;
+        std::string command;
+        bool is_running;
+    };
+
+    Job* findJobByPid(pid_t pid);
+    Job* findJobById(int job_id);
 
 private:
+   std::vector<Job> jobs;  // List of jobs
+    int next_job_id = 1; 
+
+    
     std::string promttext = "From Shelld > ";
     void displayPrompt(std::string promttext); 
    
@@ -130,6 +144,22 @@ private:
     void dfCommand();
 
     void killCommand(const std::vector<std::string>& args);
+
+
+
+
+
+    void removeJob(pid_t pid);
+    
+    
+    void listJobs();
+    void addJob(pid_t pid, const std::string& command, bool is_running);
+
+    void helppidCommand();
+
+    void cleanupJobs();
+
+    void wifeCommand();
 };
 
 
