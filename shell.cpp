@@ -467,10 +467,10 @@ void Shelld::helpCommand() {
     std::cout << "LPESHKA: process monitoring stuff, pids and other info for unix systems." << std::endl;
     std::cout << "srch: just for search like in bash. Helps to find any key word or text from the file provided." << std::endl;
     std::cout << "setentry: customize the promt (aka the entry for each line). just write //setentry ''Your new entry''. The syntax is pretty clear." << std::endl;
-    std::cout << BLUE << "dude: general documentation and instructions" << RESET << std::endl;
-    std::cout << BLUE << "runfile: compile and run directly in shelld C files." << RESET << std::endl;
-    std::cout << BLUE << "shellinsd: clone repos to your local machine and just download software" << RESET << std::endl;
-    std::cout << BLUE << "wife: prints out our logo (used for testing if shell is running)" << RESET << std::endl;
+    std::cout << YELLOW << "dude: general documentation and instructions" << RESET << std::endl;
+    std::cout << YELLOW << "runfile: compile and run directly in shelld C files." << RESET << std::endl;
+    std::cout << YELLOW << "shellinsd: clone repos to your local machine and just download software" << RESET << std::endl;
+    std::cout << YELLOW << "wife: prints out our logo (used for testing if shell is running)" << RESET << std::endl;
     std::cout << " \n";
     std::cout << BOLD << "COMPLEX COMMANDS" << RESET << std::endl;
     std::cout << "addjob: add a process \n";
