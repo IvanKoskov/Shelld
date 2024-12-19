@@ -460,6 +460,10 @@ void Shelld::helpCommand() {
     std::cout << "df: df like in bash. System stats and etc." << std::endl;
     std::cout << YELLOW << "kill: be careful! this command can kill system processes, there is no cancel option!" << RESET << std::endl;
     std::cout << "tar: creating tars, extracting them and etc." << std::endl;
+    std::cout << "zip: creating zip archives like with TAR command, extracting them and etc." << std::endl;
+    std::cout << "unzip: extracting zips and additional options before doing it. " << std::endl;
+    std::cout << "gzip: creating gzip archives specifically" << std::endl;
+    std::cout << "gunzip: unzipping gzips" << std::endl;
     std::cout << "LPESHKA: process monitoring stuff, pids and other info for unix systems." << std::endl;
     std::cout << "srch: just for search like in bash. Helps to find any key word or text from the file provided." << std::endl;
     std::cout << "setentry: customize the promt (aka the entry for each line). just write //setentry ''Your new entry''. The syntax is pretty clear." << std::endl;
