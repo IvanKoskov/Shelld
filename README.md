@@ -30,7 +30,10 @@ Just type    ```
 ## Who needs?
 
 This can be used on daily life terminal tasks and to just learn if you are not familiar with shell and terminal interaction.
-Shelld provieds useful features for cloning reposiories and dowloading softare and source code from open sources.
+Shelld provieds useful features for cloning reposiories and dowloading softare and source code from open sources and etc.
+
+> [!TIP]
+> More documentation and code explanation is inside source code files, consider reading if interested.
 
 ## disadvantages kinda
 
