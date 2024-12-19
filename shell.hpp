@@ -22,7 +22,9 @@
 #include <cstdlib>
 #include <fcntl.h>
 #include <sys/wait.h>
+
 //our shell colrs. Red does not work by some reason...
+
 #define RESET   "\033[0m"
 #define BLACK   "\033[30m"
 #define RED     "\033[31m"
@@ -162,6 +164,20 @@ private:
     void wifeCommand();
 
     void executeScript(const std::vector<std::string>& args);
+
+    void reverseCommand(const std::vector<std::string>& args);
+
+    void installCommand(const std::vector<std::string>& args);
+
+    void runCFile(const std::string& filename);
+
+    void zipCommand(const std::vector<std::string>& args);
+
+    void unzipCommand(const std::vector<std::string>& args);
+
+    void gzipCommand(const std::vector<std::string>& args);
+
+    void gunzipCommand(const std::vector<std::string>& args);
 };
 
 

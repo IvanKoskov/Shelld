@@ -34,6 +34,43 @@
 
         }
 
+        else if (input.rfind("gunzip", 0) == 0) {
+    std::vector<std::string> args = parseInput(input);
+    gunzipCommand(args);
+       }
+
+        else if (input.rfind("gzip", 0) == 0) {
+    std::vector<std::string> args = parseInput(input);
+    gzipCommand(args);
+       }
+
+        else if (input.rfind("unzip", 0) == 0) {
+    std::vector<std::string> args = parseInput(input);
+    unzipCommand(args);
+       } 
+
+        else if (input.rfind("zip", 0) == 0) {
+    std::vector<std::string> args = parseInput(input);
+    zipCommand(args);
+       }
+
+      else if (input.rfind("runfile", 0) == 0) {
+    std::vector<std::string> args = parseInput(input);
+    if (args.size() < 2) {
+        std::cerr << "runfile: missing filename\n";
+    } else {
+        runCFile(args[1]);  // Pass the filename directly
+    }
+      }
+
+
+
+        else if (input.rfind("shellinsd", 0) == 0) {
+    std::vector<std::string> args = parseInput(input);
+    installCommand(args);
+       }
+
+
         else if (input.rfind("addjob", 0) == 0) {
     std::vector<std::string> args = parseInput(input);
     pid_t pid = std::stoi(args[1]); // Extract PID from command args
@@ -208,6 +245,11 @@ else if (input.rfind("fg", 0) == 0) {
             std::vector<std::string> args = parseInput(input); 
             echoCommand(args);  // Call echo command
         }
+
+        else if (input.rfind("reverse", 0) == 0) {
+    std::vector<std::string> args = parseInput(input);
+    reverseCommand(args);
+       }
 
 
         
@@ -421,7 +463,22 @@ void Shelld::helpCommand() {
     std::cout << "LPESHKA: process monitoring stuff, pids and other info for unix systems." << std::endl;
     std::cout << "srch: just for search like in bash. Helps to find any key word or text from the file provided." << std::endl;
     std::cout << "setentry: customize the promt (aka the entry for each line). just write //setentry ''Your new entry''. The syntax is pretty clear." << std::endl;
-    std::cout << CYAN << "dude: general documentation and instructions" << RESET << std::endl;
+    std::cout << BLUE << "dude: general documentation and instructions" << RESET << std::endl;
+    std::cout << BLUE << "runfile: compile and run directly in shelld C files." << RESET << std::endl;
+    std::cout << BLUE << "shellinsd: clone repos to your local machine and just download software" << RESET << std::endl;
+    std::cout << BLUE << "wife: prints out our logo (used for testing if shell is running)" << RESET << std::endl;
+    std::cout << " \n";
+    std::cout << BOLD << "COMPLEX COMMANDS" << RESET << std::endl;
+    std::cout << "addjob: add a process \n";
+    std::cout << "listjobs: self explanatory\n";
+    std::cout << "removejobs: delete em\n";
+    std::cout << "runbg: in background\n";
+    std::cout << "fg: reveal kinda??\n";
+    std::cout << "reverse: simple command to reverse any text\n";
+    std::cout << "combinations*: you can combine commands and etc, do some complex things kinda if it does not break\n";
+    std::cout << "cleanjb: clean all jobs what is important\n";
+     std::cout << "pidss: some managment info\n";
+
     std::cout << YELLOW << "+-------------------------------+" << RESET << std::endl;
 }
 
@@ -1246,7 +1303,145 @@ void Shelld::executeScript(const std::vector<std::string>& args) {
     scriptFile.close();  // Don't forget to close the file
 }
 
+void Shelld::reverseCommand(const std::vector<std::string>& args) {
+    if (args.size() < 2) {
+        std::cerr << "reverse: missing string to reverse\n";
+        return;
+    }
+
+    // Join all arguments into a single string
+    std::string input;
+    for (size_t i = 1; i < args.size(); ++i) {
+        input += args[i];
+        if (i != args.size() - 1) {
+            input += " "; // Add spaces between words
+        }
+    }
+
+    // Reverse the entire string
+    std::reverse(input.begin(), input.end());
+    std::cout << "Reversed: " << input << "\n";
+}
 
 
+void Shelld::installCommand(const std::vector<std::string>& args) {
+    if (args.size() != 2) {
+        std::cerr << "shellinsd: usage: shellinsd <url>\n";
+        return;
+    }
 
+    const std::string& url = args[1];
 
+    // Check if it's a git repository
+    if (url.find("github.com") != std::string::npos || url.find(".git") != std::string::npos) {
+        std::cout << "Cloning repository from: " << url << "\n";
+        std::string command = "git clone " + url;
+        int result = system(command.c_str());
+        if (result != 0) {
+            std::cerr << "Error: Failed to clone repository.\n";
+        } else {
+            std::cout << "Repository cloned successfully.\n";
+        }
+    } 
+    // Otherwise, try downloading it
+    else {
+        std::cout << "Downloading file from: " << url << "\n";
+        std::string command = "wget " + url;
+        int result = system(command.c_str());
+        if (result != 0) {
+            std::cerr << "Error: Failed to download file.\n";
+        } else {
+            std::cout << "File downloaded successfully.\n";
+        }
+    }
+}
+
+void Shelld::runCFile(const std::string& filename) {
+    if (!std::filesystem::exists(filename)) {
+        std::cerr << "runfile: file '" << filename << "' does not exist\n";
+        return;
+    }
+
+    // Compile the file using gcc
+    std::string compileCommand = "gcc " + filename + " -o temp_exec";
+    if (std::system(compileCommand.c_str()) != 0) {
+        std::cerr << "runfile: compilation failed\n";
+        return;
+    }
+
+    // Execute the compiled binary
+    std::string executeCommand = "./temp_exec";
+    if (std::system(executeCommand.c_str()) != 0) {
+        std::cerr << "runfile: execution failed\n";
+    }
+
+    // Clean up the generated executable
+    std::filesystem::remove("temp_exec");
+}
+
+void Shelld::zipCommand(const std::vector<std::string>& args) {
+    if (args.size() < 3) {
+        std::cerr << "zip: missing files to archive\n";
+        return;
+    }
+
+    std::string command = "zip " + args[1];  // archive name
+    for (size_t i = 2; i < args.size(); ++i) {
+        command += " " + args[i];  // file names to zip
+    }
+
+    int result = std::system(command.c_str());
+    if (result == 0) {
+        std::cout << "Archive created successfully: " << args[1] << std::endl;
+    } else {
+        std::cerr << "zip: error creating archive\n";
+    }
+}
+
+void Shelld::unzipCommand(const std::vector<std::string>& args) {
+    if (args.size() != 2) {
+        std::cerr << "unzip: missing archive to extract\n";
+        return;
+    }
+
+    std::string command = "unzip " + args[1];  // archive to unzip
+
+    int result = std::system(command.c_str());
+    if (result == 0) {
+        std::cout << "Archive extracted successfully: " << args[1] << std::endl;
+    } else {
+        std::cerr << "unzip: error extracting archive\n";
+    }
+}
+
+void Shelld::gzipCommand(const std::vector<std::string>& args) {
+    if (args.size() != 2) {
+        std::cerr << "gzip: missing file to compress\n";
+        return;
+    }
+
+    std::string command = "gzip " + args[1];  // file name to compress
+
+    int result = std::system(command.c_str());
+    if (result == 0) {
+        std::cout << "File compressed successfully: " << args[1] << ".gz\n";
+    } else {
+        std::cerr << "gzip: error compressing file\n";
+    }
+}
+
+void Shelld::gunzipCommand(const std::vector<std::string>& args) {
+    if (args.size() != 2) {
+        std::cerr << "gunzip: missing file to decompress\n";
+        return;
+    }
+
+    std::string command = "gunzip " + args[1];  // file to decompress
+
+    int result = std::system(command.c_str());
+    if (result == 0) {
+        std::cout << "File decompressed successfully: " << args[1] << std::endl;
+    } else {
+        std::cerr << "gunzip: error decompressing file\n";
+    }
+}
