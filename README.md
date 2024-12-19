@@ -30,6 +30,7 @@ Just type    ```
 ## Who needs?
 
 This can be used on daily life terminal tasks and to just learn if you are not familiar with shell and terminal interaction.
+Shelld provieds useful features for cloning reposiories and dowloading softare and source code from open sources.
 
 ## disadvantages kinda
 
@@ -62,7 +63,7 @@ Shelld relies on lost of headers actually, but can be optimized.
 6. Follow te instructions by typing command dude or wha.
 
 7. Errors on compiling?
-As you will intall shelld you can meet some scary looking errors. In order to fix them run the script to check for all needed headers installed.
+As you will intall shelld you can meet some scary looking errors. In order to fix them run the script to check for all needed headers installed provided in source code.
 
 Overall the project already include needed building scripts for all, so this wont be a peoblem for you.
 
