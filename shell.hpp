@@ -46,6 +46,14 @@ The Shell here is presented as class with its own private methods and clear entr
 It is actually a root of the project and can be imported.
 
 */
+
+
+
+//shell.hpp contains all headers, libs and blueprints to all methods. This file includes all definitions of used variables, constants, functions and etc
+//here everything can be acessed easily and be helpful in finding soemthing specific like a feature or definiton.
+//Shell.hpp serves a big role in making shell strcutured and separated.
+
+
 class Shelld {
 public:
 
