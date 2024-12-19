@@ -30,12 +30,15 @@ Just type    ```
 ## Who needs?
 
 This can be used on daily life terminal tasks and to just learn if you are not familiar with shell and terminal interaction.
+Shelld provieds useful features for cloning reposiories and dowloading softare and source code from open sources.
 
-## Big disadvantages
+## disadvantages kinda
 
 Mainly it is that shelld is not fully complete as a shell like bash and does not have some still useful things like code running and etc. 50/50 and ye there is no apt get (yet maybe).
 
-Btw the fact that it is c++ makes the shell funky .... kinda!
+Btw the fact that it is c++ makes the shell funky .... 
+
+Shelld relies on lost of headers actually, but can be optimized. 
 
 
 ## Installation
@@ -58,6 +61,9 @@ Btw the fact that it is c++ makes the shell funky .... kinda!
 5. Or as you are supposed to do it just type shelld in terminal.
 
 6. Follow te instructions by typing command dude or wha.
+
+7. Errors on compiling?
+As you will intall shelld you can meet some scary looking errors. In order to fix them run the script to check for all needed headers installed provided in source code.
 
 Overall the project already include needed building scripts for all, so this wont be a peoblem for you.
 
