@@ -1,4 +1,5 @@
 #include <iostream>
+#include <ncurses.h>
 #include <vector>
 #include <string>
 #include <chrono>
@@ -34,7 +35,7 @@
 #define MAGENTA "\033[35m"
 #define CYAN    "\033[36m"
 #define WHITE   "\033[37m"
-
+#define URL "https://github.com/IvanKoskov/Shelld"
 //some text style
 
 #define BOLD    "\033[1m"
@@ -70,6 +71,7 @@ struct Job {
     Job* findJobById(int job_id);
 
 private:
+bool isNumber(const std::string& s);
    std::vector<Job> jobs;  // List of jobs
     int next_job_id = 1; 
 
@@ -186,6 +188,14 @@ private:
     void gzipCommand(const std::vector<std::string>& args);
 
     void gunzipCommand(const std::vector<std::string>& args);
+
+    void openFileEditor(const std::vector<std::string>& args);
+
+    void loadFile(const std::string& filename, std::vector<std::string>& buffer);
+
+    void saveFile(const std::string& filename, const std::vector<std::string>& buffer);
+
+    void wgetCommand(const std::vector<std::string>& args);
 };
 
 

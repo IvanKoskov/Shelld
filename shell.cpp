@@ -34,6 +34,12 @@
 
         }
 
+        else if (input.rfind("nina", 0) == 0) {
+    std::vector<std::string> args = parseInput(input);
+    openFileEditor(args);
+     }
+
+
         else if (input.rfind("gunzip", 0) == 0) {
     std::vector<std::string> args = parseInput(input);
     gunzipCommand(args);
@@ -156,6 +162,16 @@ else if (input.rfind("fg", 0) == 0) {
     std::vector<std::string> args = parseInput(input);
     killCommand(args);
 }
+
+else if (input.rfind("instad", 0) == 0) {
+    std::vector<std::string> args = parseInput(input); // Assume this function splits the command into a vector of arguments
+    wgetCommand(args);  // Call the wget function
+}
+
+
+     else if (input == "visitgit") {  // Command to open GitHub page
+            system("open https://github.com/IvanKoskov/Shelld");
+        }
 
         else if (input.rfind("chamo", 0) == 0) {
     std::vector<std::string> args = parseInput(input);
@@ -443,7 +459,7 @@ void Shelld::helpCommand() {
     std::cout << GREEN << "dlt: delete file(s)" << RESET << std::endl;
     std::cout << GREEN << "setpromptcolor: changes the entry point color, but does not chnage anything else though." << RESET << std::endl;
     std::cout << GREEN << "setpromptcolor colors: to see all supported colors" << RESET << std::endl;
-    std::cout << CYAN << "LF: Exit the shell" << RESET << std::endl;
+    std::cout << CYAN << "lv: Exit the shell safely" << RESET << std::endl;
     std::cout << CYAN << "his: prints recent history" << RESET << std::endl;
     std::cout << BLUE << "nowtime: the accurate time in that moment" << RESET << std::endl;
     std::cout << BLUE << "flash // Clear : Both can clear the screen or just leave the entry point for Shelld" << RESET << std::endl;
@@ -482,7 +498,13 @@ void Shelld::helpCommand() {
     std::cout << "combinations*: you can combine commands and etc, do some complex things kinda if it does not break\n";
     std::cout << "cleanjb: clean all jobs what is important\n";
      std::cout << "pidss: some managment info\n";
+      std::cout << "nina: simplistic text editor for the files. In order to exit/save chnages press Q on the keyboard.\n";
+      std::cout << "nina is not native btw and is just a ncurses.h header that provides it. Shalom!)\n";
+      std::cout << "visitgit: quickly open our github. Might not work on Linux\n";
+      std::cout << "instad: dowload any file, asset and etc by providing a link!\n";
 
+    std::cout << YELLOW << "+-------------------------------+" << RESET << std::endl;
+    std::cout << YELLOW << BOLD << "MORE COMING SOON!" << RESET << std::endl;
     std::cout << YELLOW << "+-------------------------------+" << RESET << std::endl;
 }
 
@@ -688,6 +710,8 @@ void Shelld::dudeCommand(std::string nameofpc){
  std::cout << "• entry point : From Shelld \n";
  std::cout << "What essentially means you are good to go.. input the command!\n";
  std::cout << "• Flags with which you execute your commands cause it can affect your pc\n";
+ std::cout << " \n";
+ std::cout << "\033]8;;" << URL << "\033\\Click here to open more documentaion, Github and source code\033]8;;\033\\" << std::endl;
 
 }
 
@@ -1447,5 +1471,183 @@ void Shelld::gunzipCommand(const std::vector<std::string>& args) {
         std::cout << "File decompressed successfully: " << args[1] << std::endl;
     } else {
         std::cerr << "gunzip: error decompressing file\n";
+    }
+}
+
+
+
+
+void Shelld::openFileEditor(const std::vector<std::string>& args) {
+    if (args.size() < 2) {
+        std::cout << "Usage: husb <filename>" << std::endl;
+        return;
+    }
+
+    std::string filename = args[1];  // Get the filename from the arguments
+
+    // Open the file
+    std::ifstream file(filename);
+    if (!file.is_open()) {
+        std::cerr << "Could not open file: " << filename << std::endl;
+        return;
+    }
+
+    // Read the file into a vector of strings (one line per vector element)
+    std::vector<std::string> fileContent;
+    std::string line;
+    while (std::getline(file, line)) {
+        fileContent.push_back(line);
+    }
+    file.close();
+
+    // Initialize ncurses
+    initscr();
+    raw();
+    keypad(stdscr, TRUE);
+    noecho();
+    start_color();  // Initialize color support
+
+    // Define color pairs for syntax highlighting
+    init_pair(1, COLOR_RED, COLOR_BLACK);    // Keywords in red
+    init_pair(2, COLOR_GREEN, COLOR_BLACK);  // Strings in green
+    init_pair(3, COLOR_YELLOW, COLOR_BLACK); // Numbers in yellow
+
+    int row, col;
+    getmaxyx(stdscr, row, col);
+    int curRow = 0, curCol = 0;  // Starting position for text input
+
+    // A simple list of keywords for syntax highlighting
+    std::vector<std::string> keywords = {"if", "else", "while", "for", "return", "int", "void"};
+
+    // Loop for editing the file content
+    while (true) {
+        clear();  // Clear the screen
+        for (int i = 0; i < fileContent.size(); i++) {
+            std::istringstream lineStream(fileContent[i]);
+            std::string word;
+            int colPos = 0;
+
+            while (lineStream >> word) {
+                bool isKeyword = false;
+                // Check if the word is a keyword
+                for (const auto& keyword : keywords) {
+                    if (word == keyword) {
+                        isKeyword = true;
+                        attron(COLOR_PAIR(1));  // Apply red color for keywords
+                        break;
+                    }
+                }
+
+                // Highlight numbers in yellow
+                if (!isKeyword && isNumber(word)) {
+                    attron(COLOR_PAIR(3));  // Apply yellow color for numbers
+                }
+
+                // Highlight strings in green (for simplicity, assuming strings are enclosed in quotes)
+                if (!isKeyword && word.front() == '"' && word.back() == '"') {
+                    attron(COLOR_PAIR(2));  // Apply green color for strings
+                }
+
+                mvprintw(i, colPos, word.c_str());  // Print the word
+                colPos += word.length() + 1;  // Move the position for the next word
+
+                // Reset color for the next word
+                attroff(COLOR_PAIR(1));
+                attroff(COLOR_PAIR(2));
+                attroff(COLOR_PAIR(3));
+            }
+        }
+
+        // Move the cursor to the position
+        move(curRow, curCol);
+        refresh();
+
+        int ch = getch();  // Get user input
+
+        if (ch == 'q') {  // Press 'q' to quit
+            break;
+        } else if (ch == 10) {  // Enter key
+            curRow++;
+            curCol = 0;
+        } else if (ch == KEY_BACKSPACE || ch == 127) {  // Handle backspace
+            if (curCol > 0) {
+                fileContent[curRow].erase(curCol - 1, 1);
+                curCol--;
+            }
+        } else if (ch == KEY_LEFT) {  // Move cursor left
+            if (curCol > 0) curCol--;
+        } else if (ch == KEY_RIGHT) {  // Move cursor right
+            if (curCol < fileContent[curRow].size()) curCol++;
+        } else if (ch == KEY_UP) {  // Move cursor up
+            if (curRow > 0) curRow--;
+        } else if (ch == KEY_DOWN) {  // Move cursor down
+            if (curRow < fileContent.size() - 1) curRow++;
+        } else {  // Otherwise, insert the character
+            fileContent[curRow].insert(curCol, 1, static_cast<char>(ch));
+            curCol++;
+        }
+    }
+
+    // Save the file content back to the file
+    std::ofstream outFile(filename);
+    if (outFile.is_open()) {
+        for (const auto& line : fileContent) {
+            outFile << line << std::endl;
+        }
+        outFile.close();
+    } else {
+        std::cerr << "Could not save file: " << filename << std::endl;
+    }
+
+    // End ncurses session
+    endwin();
+}
+
+// Helper function to check if a string is a number
+bool Shelld::isNumber(const std::string& s) {
+    for (char c : s) {
+        if (!isdigit(c)) return false;
+    }
+    return true;
+}
+
+
+void Shelld::loadFile(const std::string& filename, std::vector<std::string>& buffer) {
+    std::ifstream infile(filename);
+    std::string line;
+    while (std::getline(infile, line)) {
+        buffer.push_back(line);  // Load the file into the buffer
+    }
+    infile.close();
+}
+
+void Shelld::saveFile(const std::string& filename, const std::vector<std::string>& buffer) {
+    std::ofstream outfile(filename);
+    for (const auto& line : buffer) {
+        outfile << line << "\n";  // Save buffer contents back to the file
+    }
+    outfile.close();
+}
+
+
+void Shelld::wgetCommand(const std::vector<std::string>& args) {
+    if (args.size() < 2) {
+        std::cout << "Usage: wget <URL>" << std::endl;
+        return;
+    }
+
+    // Get the URL from the arguments
+    std::string url = args[1];
+
+    // Build the wget command
+    std::string command = "wget " + url;
+
+    // Execute the command using system()
+    int result = system(command.c_str());
+
+    if (result != 0) {
+        std::cerr << "Error downloading file from " << url << std::endl;
+    } else {
+        std::cout << "File downloaded successfully from " << url << std::endl;
     }
 }
