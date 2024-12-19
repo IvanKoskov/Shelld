@@ -73,3 +73,6 @@ Overall the project already include needed building scripts for all, so this won
 
 > [!WARNING]
 > Before doing anything note that we are not to take care of your actions and please think before running something, because there is no going back. Some commands can kill your pc. Good luck.
+
+
+License can be found in source code under LICENSE file or github repository viewer by clicking the button.
